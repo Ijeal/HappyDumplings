@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+<!--     <meta name="viewport" content="initial-scale=0.3, maximum-scale=0.3, minimum-scale=0.3, user-scalable=no">
+ -->  <!-- 引入样式 -->
+  <link rel="stylesheet" href="./js/index.css">
+</head>
+<body>
+  <div id="app">
+    <el-container>
+	  <el-main>
+		  <el-card :body-style="{ padding: '0px'}">
+	      <div v-if="startBtn" style="padding: 14px;">
+			  <el-button type="primary" plain style="width: 100%" @click="start">开始猜馅</el-button>
+	      </div>
+	      <div v-if="submitBtn" style="padding: 14px;">
+			  <el-button type="primary" plain style="width: 100%" @click="submit">提交结果</el-button>
+	      </div>
+	      <div v-if="submitBtn">
+	      	 <el-table
+			    ref="multipleTable"
+			    :data="tableData3"
+			    tooltip-effect="dark"
+			    style="width: 100%"
+			    @selection-change="handleSelectionChange">
+			    <el-table-column
+			      type="selection"
+			      width="55">
+			    </el-table-column>
+			    <el-table-column
+			      type="index"
+			      width="50">
+			    </el-table-column>
+			    <el-table-column
+			      prop="name"
+			      label="食材名称"
+			      width="120">
+			    </el-table-column>
+			  </el-table>
+	      </div>
+
+	    </el-card>
+	  </el-main>
+	  <el-footer>
+	  	
+	  </el-footer>
+	</el-container>
+  </div>
+</body>
+<style>
+  .result {
+    font-size: 25px;
+    color: rgb(0, 0, 0);
+  }
+  
+  .bottom {
+    margin-top: 13px;
+    line-height: 12px;
+  }
+
+  .button {
+    padding: 0;
+    float: right;
+  }
+
+  .image {
+    width: 100%;
+    display: block;
+  }
+  .message {
+    width: 100%;
+    font-size:300%;
+  }
+  .btnmessage {
+    font-size:150%;
+  }
+  .clearfix:before,
+  .clearfix:after {
+      display: table;
+      content: "";
+  }
+  
+  .clearfix:after {
+      clear: both
+  }
+  .blink_me {
+		  animation: blinker 1.3s linear infinite;
+		  color:#e99a07
+  }
+  @keyframes blinker {  
+		  50% { opacity: 0; }
+		}
+</style>
+<script src="./js/env.js"></script>
+  <!-- 先引入 Vue -->
+  <script src="./js/vue.js"></script>
+  <!-- 引入组件库 -->
+  <script src="./js/index.js"></script>
+  <script src="./js/axios.min.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data: function() {
+        return {
+	       	tableData3: [{
+	       		   id: 1,
+	               name: '猪肉'
+	             }, {
+	            	 id: 4,
+	               name: '羊肉'
+	             }, {
+	            	 id: 5,
+	               name: '牛肉'
+	             }, {
+	            	 id: 6,
+	               name: '鲅鱼'
+	             }, {
+	            	 id: 7,
+	               name: '虾泥'
+	             }, {
+	            	 id: 8,
+	               name: '鸡蛋'
+	             }, {
+	            	 id: 9,
+	               name: '芹菜'
+	             }, {
+	            	 id: 10,
+	               name: '白菜'
+	             }, {
+	            	 id: 11,
+	               name: '荠菜'
+	             }, {
+	            	 id: 12,
+	               name: '胡萝卜'
+	             }, {
+	            	 id: 13,
+	               name: '白萝卜'
+	             }, {
+	            	 id: 14,
+	               name: '韭菜'
+	             }, {
+	            	 id: 15,
+	               name: '玉米粒'
+	             }, {
+	            	 id: 16,
+	               name: '香菇'
+	             }, {
+	            	 id: 17,
+	               name: '木耳'
+	             }, {
+	            	 id: 18,
+	               name: '葱'
+	             }],
+        	multipleSelection: [],
+        	selectedStr: '',
+        	startBtn: true,
+        	submitBtn: false
+        }
+      },
+      methods: {
+    	  getUser () {
+              let that = this
+              axios.get(baseUrl+':'+basePort+'/activity/getusertask?timestamp=' + new Date().getTime(),{})
+              .then(function(res){
+            	  if(res.data.iscorrect != -1){
+            		  that.$message({
+                          type: 'warning',
+                          message: '您已经提交答案！'
+                      })
+            		  window.location.href="quizlogin.html"
+            	  } else {
+            		  
+            	  } 
+              })
+              .catch(function(err){
+                that.$message({
+                    type: 'warning',
+                    message: '用户未登录！'
+                })
+                window.location.href="chancelogin.html"
+              })
+            },
+    	handleSelectionChange(val) {
+    		  this.multipleSelection = []
+    	      this.selectedStr = ''
+    	      for (var i = 0; i < val.length; i++) {
+    	        this.multipleSelection.unshift(val[i].id)
+    	      }
+    	      
+    	      this.multipleSelection.sort(this.NumAscSort)
+    	      for (var i = 0; i < this.multipleSelection.length; i++) {
+    	    	  if(i!=0) this.selectedStr += ',';
+    	    	  this.selectedStr += this.multipleSelection[i];
+    	      }
+	      },
+	      NumAscSort(a,b)
+	      {
+	       return a - b;
+	      },
+        start () {
+          let that = this
+          this.$confirm('<h1>确认开始?</h1>', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning',
+              center: true,
+              customClass: 'message',
+              cancelButtonClass: 'btnmessage',
+              confirmButtonClass: 'btnmessage',
+              dangerouslyUseHTMLString: true
+            }).then(() => {
+            	that.startBtn = false;
+            	that.submitBtn = true;
+                axios.post(baseUrl+':'+basePort+'/activity/quizstart',{})
+                .then(function(res){
+                	
+                })
+                .catch(function(err){
+                  that.$message({
+                      type: 'warning',
+                      message: '开始失败，请刷新页面重新开始！'
+                  })
+                })
+            }).catch((err) => {
+              this.$message({
+                type: 'info',
+                message: '已取消开始'
+              });          
+            });
+
+        },
+        submit () {
+            let that = this
+            this.$confirm('<h1>确认提交?</h1>', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+                center: true,
+                customClass: 'message',
+                cancelButtonClass: 'btnmessage',
+                confirmButtonClass: 'btnmessage',
+                dangerouslyUseHTMLString: true
+              }).then(() => {
+              	that.startBtn = false;
+              	that.submitBtn = true;
+                  axios.post(baseUrl+':'+basePort+'/activity/quizsubmit',{"selectedStr": that.selectedStr})
+                  .then(function(res){
+                  	that.$message({
+                          type: 'success',
+                          message: '提交成功'
+                      })
+                      setTimeout(() => {
+                    	  window.location.href="quizlogin.html"
+			            }, 3000);
+                      
+                  })
+                  .catch(function(err){
+                    that.$message({
+                        type: 'warning',
+                        message: '提交失败，请刷新页面重新投票！'
+                    })
+                  })
+              }).catch(() => {
+                this.$message({
+                  type: 'info',
+                  message: '已取消提交'
+                });          
+              });
+
+          }
+      },
+      mounted () {
+    	  this.getUser()
+      }
+
+    })
+  </script>
+</html>

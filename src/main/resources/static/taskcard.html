@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+<!--     <meta name="viewport" content="initial-scale=0.3, maximum-scale=0.3, minimum-scale=0.3, user-scalable=no">
+ -->  <!-- 引入样式 -->
+  <link rel="stylesheet" href="./js/index.css">
+</head>
+<body>
+  <div id="app">
+    <el-container>
+	  <el-header v-if="!showcard">
+	  	<div v-if="shuffling" style="text-align:center;font-size:300%;">
+			<h1 class="blink_me">正在分配任务卡，请稍候...</h1>
+		</div>
+		<div  style="text-align:center;">
+			<el-button v-if="showbtn" round type="primary" @click="enableTask" style="padding:20px;font-size:300%;">抽取任务卡</el-button>
+		</div>
+	  </el-header>
+	  <el-main>
+		  <el-card :body-style="{ padding: '0px' }" v-if="showcard">
+	      <img :src="imgpath" class="image">
+	      <div style="padding: 14px;font-size:300%;">
+	        <span class="result">{{ingredientsName}}</span>
+	        <div>名字：{{username}}</div>
+	        <div>猜馅编号：{{ingredients}}</div>
+	        <!-- <div>小组名字：{{usergroupName}}</div> -->
+	        <div>任务要求：{{otheringredientsStr}}</div>
+	      </div>
+	    </el-card>
+	  </el-main>
+	  <el-footer>
+	  	
+	  </el-footer>
+	</el-container>
+  </div>
+</body>
+<style>
+  .result {
+    font-size: 300%;
+    color: rgb(0, 0, 0);
+  }
+  
+  .bottom {
+    margin-top: 13px;
+    line-height: 12px;
+  }
+
+  .button {
+    padding: 0;
+    float: right;
+  }
+
+  .image {
+    width: 100%;
+    display: block;
+  }
+
+  .clearfix:before,
+  .clearfix:after {
+      display: table;
+      content: "";
+  }
+  
+  .clearfix:after {
+      clear: both
+  }
+  .blink_me {
+		  animation: blinker 1.3s linear infinite;
+		  color:#e99a07
+  }
+  @keyframes blinker {  
+		  50% { opacity: 0; }
+		}
+</style>
+<script src="./js/env.js"></script>
+  <!-- 先引入 Vue -->
+  <script src="./js/vue.js"></script>
+  <!-- 引入组件库 -->
+  <script src="./js/index.js"></script>
+  <script src="./js/axios.min.js"></script>
+  <script>
+  var config = {	headers: {'Content-Type': 'application/json','Cache-Control' : 'no-cache'}};
+
+    new Vue({
+      el: '#app',
+      data: function() {
+        return {
+        	currentDate: new Date(),
+        	shuffling: false,
+        	showcard: false,
+        	showbtn: false,
+        	ingredients: 0,
+        	ingredientsName: '',
+        	usergroupName: '',
+        	otheringredientsStr: '',
+        	imgpath: './imgs/img1.png',
+        	username: ''
+        }
+      },
+      methods: {
+        getUser () {
+          let that = this
+          axios.get(baseUrl+':'+basePort+'/activity/getusertask?timestamp=' + new Date().getTime(),{},config)
+          .then(function(res){
+        	  that.username = res.data.username;
+              that.ingredients = res.data.ingredients;
+              that.ingredientsName = res.data.ingredientsName;
+              that.usergroupName = res.data.usergroupName;
+              that.otheringredientsStr = res.data.otheringredientsStr;
+              that.imgpath = './imgs/'+res.data.ingredients+'.png'
+        	  if(res.data.taskcardenable === 0){
+            	  that.showcard = false;
+				  that.showbtn = true;
+        	  } else {
+        		  that.showcard = true;
+        		  that.showbtn = false;
+        	  }
+			 
+          })
+          .catch(function(err){
+            that.$message({
+                type: 'warning',
+                message: '用户未登录！'
+            })
+            window.location.href="chancelogin.html"
+          })
+        },
+        enableTask () {
+          let that = this
+          axios.post(baseUrl+':'+basePort+'/activity/enabletask',{})
+            .then(function(res){
+              that.username = res.data.username;
+              that.ingredients = res.data.ingredients;
+              that.ingredientsName = res.data.ingredientsName;
+              that.usergroupName = res.data.usergroupName;
+              that.otheringredientsStr = res.data.otheringredientsStr;
+              that.imgpath = './imgs/'+res.data.ingredients+'.png'
+              that.shuffling = true;
+              that.showbtn = false;
+              setTimeout(() => {
+	            that.shuffling = false;
+	            that.showcard = true;
+	            }, 5000);
+            })
+            .catch(function(err){
+              that.$message({
+                  type: 'warning',
+                  message: '任务分配失败，请刷新页面重新分配！'
+              })
+            })
+        }
+      },
+      mounted () {
+    	  this.getUser()
+      }
+
+    })
+  </script>
+</html>
